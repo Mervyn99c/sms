@@ -3,6 +3,12 @@ package handler
 
 import (
 	"net/http"
+
+	api "sms/app/gateway/api/internal/handler/api"
+	batch "sms/app/gateway/api/internal/handler/batch"
+	history "sms/app/gateway/api/internal/handler/history"
+	report "sms/app/gateway/api/internal/handler/report"
+	template "sms/app/gateway/api/internal/handler/template"
 	"sms/app/gateway/api/internal/svc"
 
 	"github.com/zeromicro/go-zero/rest"
@@ -13,22 +19,94 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 		[]rest.Route{
 			{
 				Method:  http.MethodPost,
-				Path:    "/register",
-				Handler: RegisterHandler(serverCtx),
+				Path:    "/message",
+				Handler: api.SendMessageHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/message/code/verification",
+				Handler: api.VerifyCodeHandler(serverCtx),
 			},
 		},
-		rest.WithPrefix("/v1"),
+		rest.WithPrefix("/v1/api"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodPost,
+				Path:    "/mms",
+				Handler: batch.BatchDeliveryMMSHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/sms",
+				Handler: batch.BatchDeliverySMSHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/v1/batch"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodPost,
+				Path:    "/list",
+				Handler: history.FetchMessageHistoryPageListHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/v1/history"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodPost,
+				Path:    "/message/feedback/we",
+				Handler: report.WeMessageCallbackReceiverHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/message/feedback/xsxx",
+				Handler: report.XsxxMessageCallbackReceiverHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/message/report/we",
+				Handler: report.ReceiveWeReportHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/message/report/xsxx",
+				Handler: report.ReceiveXsxxReportHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/v1/report"),
 	)
 
 	server.AddRoutes(
 		[]rest.Route{
 			{
 				Method:  http.MethodGet,
-				Path:    "/info",
-				Handler: UserInfoHandler(serverCtx),
+				Path:    "/:id",
+				Handler: template.FetchMessageTemplateAndConfigByIdHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPut,
+				Path:    "/:id",
+				Handler: template.UpdateTemplateHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodDelete,
+				Path:    "/:id",
+				Handler: template.DeleteTemplateHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/list",
+				Handler: template.FetchMessageTemplatePageListHandler(serverCtx),
 			},
 		},
-		//rest.WithSignature(serverCtx.Config.Signature),
-		rest.WithPrefix("/v1/user"),
+		rest.WithPrefix("/v1/template"),
 	)
 }
