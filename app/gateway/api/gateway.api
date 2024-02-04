@@ -1,0 +1,101 @@
+syntax = "v1"
+
+type (
+    RegisterRequest {
+        Name string `json:"name"`
+        Mobile string `json:"mobile"`
+        Password string `json:"password"`
+        VerificationCode string `json:"verification_code"`
+    }
+    RegisterResponse {
+        UserId int64 `json:"user_id"`
+    }
+    UserInfoResponse {
+        UserId int64 `json:"user_id"`
+        Username string `json:"username"`
+        Avatar string `json:"avatar"`
+    }
+)
+
+@server(
+    prefix: /api
+    group : api
+)
+service gateway {
+    @handler SendMessage
+    post /message (RegisterRequest) returns (RegisterResponse)
+
+    @handler VerifyCode
+    post /message/code/verification (RegisterRequest) returns (RegisterResponse)
+}
+
+
+@server(
+    prefix: /report
+    group : report
+)
+service gateway {
+    @handler ReceiveXsxxReport
+    post /message/report/xsxx (RegisterRequest) returns (RegisterResponse)
+
+    @handler ReceiveWeReport
+    post /message/report/we (RegisterRequest) returns (RegisterResponse)
+
+    @doc "we批量短彩信回传发送报告"
+    @handler WeMessageCallbackReceiver
+    post /message/feedback/we (RegisterRequest) returns (RegisterResponse)
+
+    @doc "xsxx批量短彩信回传发送报告"
+    @handler xsxxMessageCallbackReceiver
+    post /message/feedback/xsxx (RegisterRequest) returns (RegisterResponse)
+}
+
+
+
+
+@server(
+    prefix: /batch
+    group : batch
+)
+service gateway {
+    @handler BatchDeliverySMS
+    post /sms (RegisterRequest) returns (RegisterResponse)
+
+    @handler BatchDeliveryMMS
+    post /mms (RegisterRequest) returns (RegisterResponse)
+}
+
+// ================
+@server(
+    prefix: /history
+    group : history
+)
+service gateway {
+    @handler FetchMessageHistoryPageList
+    post /list (RegisterRequest) returns (RegisterResponse)
+}
+
+// ================
+@server(
+    prefix:    /template
+    group : template
+)
+service gateway {
+    @doc ""
+    @handler FetchMessageTemplatePageList
+    get /list returns (UserInfoResponse)
+
+    @doc ""
+    @handler FetchMessageTemplateAndConfigById
+    get /:id returns (UserInfoResponse)
+
+    @doc ""
+    @handler UpdateTemplate
+    put /:id returns (UserInfoResponse)
+
+    @doc ""
+    @handler DeleteTemplate
+    delete /:id returns (UserInfoResponse)
+}
+
+

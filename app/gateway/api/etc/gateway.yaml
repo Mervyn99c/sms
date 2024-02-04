@@ -1,0 +1,30 @@
+Name: gateway
+Host: 0.0.0.0
+Port: 8888
+
+DB:
+  DataSource: "root:root@tcp(110.41.165.222:3306)/smsgateway?parseTime=true&loc=Local"
+  MaxIdleConns: 10
+  MaxOpenConns: 100
+  ConnMaxLifetime: 3600
+
+BizRedis:
+  Host: 110.41.165.222:6379
+  Pass:
+  Type: node
+
+#kq
+KqConsumerConf:
+  Name: kqConsumer
+  Brokers:
+    - 127.0.0.1:9092
+  Group: kqConsumer
+  Topic: payment-success
+  Offset: first
+  Consumers: 8
+  Processors: 8
+
+KqPusherConf:
+  Brokers:
+    - 127.0.0.1:9092
+  Topic: payment-success
